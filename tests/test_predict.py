@@ -1,4 +1,6 @@
 from pathlib import Path
+import subprocess
+import sys
 
 import joblib
 import pytest
@@ -38,4 +40,41 @@ def test_predict_text_returns_label_and_confidence(tmp_path):
     result = predict_text("i feel happy", artifact_path)
 
     assert result["label"] in {"joy", "sadness"}
+    assert 0.0 <= result["confidence"] <= 1.0
+
+
+def test_artifact_trained_via_script_loads_in_predict(tmp_path):
+    dataset_path = tmp_path / "train.txt"
+    artifact_path = tmp_path / "artifacts" / "emotion_model.joblib"
+    dataset_path.write_text(
+        "i feel calm today;joy\n"
+        "i feel delighted now;joy\n"
+        "i feel optimistic;joy\n"
+        "i feel cheerful;joy\n"
+        "i feel excited;joy\n"
+        "i feel radiant;joy\n"
+        "i feel abandoned;sadness\n"
+        "i feel hopeless;sadness\n"
+        "i feel lonely;sadness\n"
+        "i feel miserable;sadness\n"
+        "i feel heartbroken;sadness\n"
+        "i feel grief;sadness\n"
+        "i feel furious;anger\n"
+        "i feel enraged;anger\n"
+        "i feel irritated;anger\n"
+        "i feel annoyed;anger\n"
+        "i feel livid;anger\n"
+        "i feel boiling;anger\n",
+        encoding="utf-8",
+    )
+
+    subprocess.run(
+        [sys.executable, "/Users/sumitjadhav/python/train_model.py"],
+        check=True,
+        cwd=tmp_path,
+    )
+
+    result = predict_text("i feel happy", artifact_path)
+
+    assert result["label"] in {"joy", "sadness", "anger"}
     assert 0.0 <= result["confidence"] <= 1.0

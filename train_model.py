@@ -4,6 +4,7 @@ from functools import partial
 import re
 import string
 from pathlib import Path
+import sys
 
 import joblib
 import nltk
@@ -60,12 +61,20 @@ def preprocess_text(text: str, stop_words: set[str] | None = None) -> str:
     return " ".join(tokens).strip()
 
 
+def _build_serializable_preprocessor(stop_words: set[str]):
+    if __name__ == "__main__":
+        sys.modules.setdefault("train_model", sys.modules[__name__])
+        preprocess_text.__module__ = "train_model"
+
+    return partial(preprocess_text, stop_words=stop_words)
+
+
 def build_pipeline() -> Pipeline:
     stop_words = load_stop_words()
 
     return Pipeline(
         steps=[
-            ("tfidf", TfidfVectorizer(preprocessor=partial(preprocess_text, stop_words=stop_words))),
+            ("tfidf", TfidfVectorizer(preprocessor=_build_serializable_preprocessor(stop_words))),
             ("classifier", LogisticRegression(max_iter=1000)),
         ]
     )
