@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 import re
 import string
 from pathlib import Path
@@ -23,6 +24,11 @@ def _download_nltk_resources() -> None:
     nltk.download("stopwords", quiet=True)
 
 
+def load_stop_words() -> set[str]:
+    _download_nltk_resources()
+    return set(stopwords.words("english"))
+
+
 def load_dataset(dataset_path: Path) -> pd.DataFrame:
     if not dataset_path.exists():
         raise FileNotFoundError(f"Dataset not found: {dataset_path}")
@@ -35,9 +41,9 @@ def load_dataset(dataset_path: Path) -> pd.DataFrame:
     )
 
 
-def preprocess_text(text: str) -> str:
-    _download_nltk_resources()
-    stop_words = set(stopwords.words("english"))
+def preprocess_text(text: str, stop_words: set[str] | None = None) -> str:
+    if stop_words is None:
+        stop_words = load_stop_words()
 
     lowered = text.lower()
     no_punctuation = lowered.translate(str.maketrans("", "", string.punctuation))
@@ -48,9 +54,11 @@ def preprocess_text(text: str) -> str:
 
 
 def build_pipeline() -> Pipeline:
+    stop_words = load_stop_words()
+
     return Pipeline(
         steps=[
-            ("tfidf", TfidfVectorizer(preprocessor=preprocess_text)),
+            ("tfidf", TfidfVectorizer(preprocessor=partial(preprocess_text, stop_words=stop_words))),
             ("classifier", LogisticRegression(max_iter=1000)),
         ]
     )

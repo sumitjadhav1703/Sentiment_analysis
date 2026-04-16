@@ -23,11 +23,6 @@ def test_load_dataset_reads_expected_columns(tmp_path):
 
 
 def test_build_and_save_model_creates_pipeline_artifact(monkeypatch, tmp_path):
-    class StubStopwords:
-        @staticmethod
-        def words(language):
-            return ["i", "feel", "now", "today"]
-
     dataset_path = tmp_path / "sample.txt"
     artifact_path = tmp_path / "emotion_model.joblib"
     dataset_path.write_text(
@@ -51,8 +46,7 @@ def test_build_and_save_model_creates_pipeline_artifact(monkeypatch, tmp_path):
         "i feel boiling;anger\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr(train_model, "_download_nltk_resources", lambda: None)
-    monkeypatch.setattr(train_model, "stopwords", StubStopwords())
+    monkeypatch.setattr(train_model, "load_stop_words", lambda: {"i", "feel", "now", "today"})
 
     metrics = build_and_save_model(dataset_path, artifact_path)
 
@@ -116,13 +110,25 @@ def test_build_and_save_model_uses_fixed_notebook_split(monkeypatch, tmp_path):
 
 
 def test_preprocess_text_uses_nltk_stopwords_without_fallback(monkeypatch):
-    class MissingStopwords:
-        @staticmethod
-        def words(language):
-            raise LookupError("missing stopwords")
-
-    monkeypatch.setattr(train_model, "_download_nltk_resources", lambda: None)
-    monkeypatch.setattr(train_model, "stopwords", MissingStopwords())
+    monkeypatch.setattr(train_model, "load_stop_words", lambda: (_ for _ in ()).throw(LookupError("missing stopwords")))
 
     with pytest.raises(LookupError):
         preprocess_text("I feel calm")
+
+
+def test_build_pipeline_loads_stopwords_once(monkeypatch):
+    call_count = 0
+
+    def fake_load_stop_words():
+        nonlocal call_count
+        call_count += 1
+        return {"i", "feel"}
+
+    monkeypatch.setattr(train_model, "load_stop_words", fake_load_stop_words, raising=False)
+
+    pipeline = train_model.build_pipeline()
+    preprocessor = pipeline.named_steps["tfidf"].build_preprocessor()
+
+    assert preprocessor("I feel calm") == "calm"
+    assert preprocessor("I feel radiant") == "radiant"
+    assert call_count == 1
