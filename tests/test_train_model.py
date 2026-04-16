@@ -1,11 +1,12 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import joblib
 import pandas as pd
 import pytest
 
 import train_model
-from train_model import build_and_save_model, load_dataset, preprocess_text
+from train_model import build_and_save_model, load_dataset, load_stop_words, preprocess_text
 
 
 def test_load_dataset_reads_expected_columns(tmp_path):
@@ -132,3 +133,19 @@ def test_build_pipeline_loads_stopwords_once(monkeypatch):
     assert preprocessor("I feel calm") == "calm"
     assert preprocessor("I feel radiant") == "radiant"
     assert call_count == 1
+
+
+def test_load_stop_words_skips_download_when_stopwords_are_present(monkeypatch):
+    monkeypatch.setattr(train_model.nltk.data, "find", lambda resource: resource)
+    monkeypatch.setattr(
+        train_model.nltk,
+        "download",
+        lambda *args, **kwargs: pytest.fail("download should not be called"),
+    )
+    monkeypatch.setattr(
+        train_model,
+        "stopwords",
+        SimpleNamespace(words=lambda language: ["calm", "steady"]),
+    )
+
+    assert load_stop_words() == {"calm", "steady"}

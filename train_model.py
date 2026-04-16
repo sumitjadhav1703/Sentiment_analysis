@@ -21,6 +21,13 @@ ARTIFACT_PATH = Path("artifacts/emotion_model.joblib")
 
 
 def _download_nltk_resources() -> None:
+    for resource in ("corpora/stopwords", "corpora/stopwords.zip"):
+        try:
+            nltk.data.find(resource)
+            return
+        except LookupError:
+            continue
+
     nltk.download("stopwords", quiet=True)
 
 
