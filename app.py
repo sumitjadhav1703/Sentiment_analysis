@@ -178,7 +178,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    result_message: dict[str, str] | None = None
+    summary: dict[str, str] | None = None
 
     st.markdown('<div class="app-shell">', unsafe_allow_html=True)
     st.markdown(
@@ -219,29 +219,25 @@ def main() -> None:
             try:
                 cleaned_text = validate_text_input(text_input)
                 result = predict_text(cleaned_text)
-                result_message = build_result_message(result)
+                summary = build_status_summary(result)
+                message = build_result_message(result)
+                summary["subtext"] = f"Confidence: {message['confidence_text']}"
             except FileNotFoundError as exc:
                 st.error(str(exc))
             except ValueError as exc:
                 st.warning(str(exc))
 
-        st.markdown(
-            """
-            <div class="panel-card">
-                <span class="result-badge">Result area</span>
-                <div class="result-headline">Prediction output appears here</div>
-                <p class="result-subtext">
-                    The current task keeps the existing prediction widgets in place. A polished
-                    custom result block will be wired in the next step.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        if result_message is not None:
-            st.success(f"Predicted emotion: {result_message['label']}")
-            st.metric("Confidence", result_message["confidence_text"])
+        if summary is not None:
+            st.markdown(
+                f"""
+                <div class="panel-card">
+                    <span class="result-badge">{summary['badge']}</span>
+                    <div class="result-headline">{summary['headline']}</div>
+                    <p class="result-subtext">{summary['subtext']}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     about_col, how_to_col = st.columns(2)
     with about_col:

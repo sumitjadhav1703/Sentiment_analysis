@@ -31,3 +31,11 @@ def test_app_contains_dashboard_sections():
     assert "About the model" in source
     assert "How to use" in source
     assert ".app-shell" in source
+
+
+def test_app_uses_status_summary_in_result_section():
+    source = Path("app.py").read_text(encoding="utf-8")
+
+    assert "build_status_summary(result)" in source
+    assert "result-badge" in source
+    assert "result-headline" in source
