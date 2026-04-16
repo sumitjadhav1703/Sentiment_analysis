@@ -220,8 +220,6 @@ def main() -> None:
                 cleaned_text = validate_text_input(text_input)
                 result = predict_text(cleaned_text)
                 summary = build_status_summary(result)
-                message = build_result_message(result)
-                summary["subtext"] = f"Confidence: {message['confidence_text']}"
             except FileNotFoundError as exc:
                 st.error(str(exc))
             except ValueError as exc:
