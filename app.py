@@ -141,6 +141,13 @@ def main() -> None:
             border-radius: 16px;
             border: 1px solid var(--line);
             background: var(--panel-alt);
+            color: var(--text);
+            caret-color: var(--text);
+        }
+
+        div[data-testid="stTextArea"] textarea::placeholder {
+            color: var(--muted);
+            opacity: 1;
         }
 
         div[data-testid="stButton"] > button {
