@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from app import build_result_message, build_status_summary, validate_text_input
@@ -21,3 +23,11 @@ def test_build_status_summary_formats_dashboard_copy():
     assert summary["badge"] == "Prediction ready"
     assert summary["headline"] == "Joy"
     assert summary["subtext"] == "Confidence: 87.65%"
+
+
+def test_app_contains_dashboard_sections():
+    source = Path("app.py").read_text(encoding="utf-8")
+
+    assert "About the model" in source
+    assert "How to use" in source
+    assert ".app-shell" in source
