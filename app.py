@@ -20,6 +20,15 @@ def build_result_message(result: dict[str, float | str]) -> dict[str, str]:
     }
 
 
+def build_status_summary(result: dict[str, float | str]) -> dict[str, str]:
+    message = build_result_message(result)
+    return {
+        "badge": "Prediction ready",
+        "headline": message["label"].title(),
+        "subtext": f"Confidence: {message['confidence_text']}",
+    }
+
+
 def main() -> None:
     st.set_page_config(page_title="Emotion Classifier", page_icon="🧠")
     st.title("Emotion Classifier")

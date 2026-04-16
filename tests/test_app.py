@@ -1,6 +1,6 @@
 import pytest
 
-from app import build_result_message, validate_text_input
+from app import build_result_message, build_status_summary, validate_text_input
 
 
 def test_validate_text_input_rejects_blank_text():
@@ -13,3 +13,11 @@ def test_build_result_message_formats_label_and_confidence():
 
     assert message["label"] == "joy"
     assert message["confidence_text"] == "87.65%"
+
+
+def test_build_status_summary_formats_dashboard_copy():
+    summary = build_status_summary({"label": "joy", "confidence": 0.8765})
+
+    assert summary["badge"] == "Prediction ready"
+    assert summary["headline"] == "Joy"
+    assert summary["subtext"] == "Confidence: 87.65%"
