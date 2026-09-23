@@ -69,7 +69,7 @@ def test_artifact_trained_via_script_loads_in_predict(tmp_path):
     )
 
     subprocess.run(
-        [sys.executable, "/app/train_model.py"],
+        [sys.executable, str(Path(__file__).resolve().parents[1] / "train_model.py")],
         check=True,
         cwd=tmp_path,
     )
